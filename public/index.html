@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Leader → Halo Product Sync</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="app">
+        <h1>Add Leader Product to Halo</h1>
+
+        <!-- Screen 1: Search -->
+        <div id="search">
+            <p class="hint">Enter a Leader stock code, manufacturer SKU, or barcode.</p>
+            <div class="row search-row">
+                <input id="sku" type="text" placeholder="e.g. NHU-U7-LR  or  U7-LR  or  Ubiquiti..." autocomplete="off">
+                <button id="lookup">Look up</button>
+                <button id="run-audit">Run Price Audit</button>
+                <div id="search-dropdown" class="search-dropdown" style="display:none;"></div>
+            </div>
+            <p id="search-msg" class="msg"></p>
+        </div>
+
+        <!-- Screen 4: Price Audit (hidden until triggered) -->
+        <div id="audit" style="display:none;">
+            <div class="row">
+                <button id="audit-back" class="danger">← Back</button>
+                <h2 id="audit-summary" style="margin:0;flex:1;"></h2>
+            </div>
+            <div id="audit-loading" class="hint">Fetching all Halo items and comparing to Leader catalogue…</div>
+            <div id="audit-scroll">
+                <table id="audit-table"></table>
+            </div>
+        </div>
+
+        <!-- Screen 2: Confirm (hidden until a match is found) -->
+        <div id="confirm" style="display:none;">
+            <div class="card" id="product-card">
+                <img id="product-image" alt="">
+                <div class="card-body">
+                    <h2 id="product-name"></h2>
+                    <p id="product-meta" class="meta"></p>
+                    <p id="product-codes" class="codes"></p>
+                </div>
+            </div>
+
+            <div class="price-grid">
+                <div><span>Leader cost (ex GST)</span><strong id="cost-ex"></strong></div>
+                <div><span>Cost (inc GST)</span><strong id="cost-inc"></strong></div>
+                <div class="highlight"><span>Retail price</span><strong id="retail"></strong><small id="retail-ex" class="sub-price"></small></div>
+                <div><span>Wholesale</span><strong id="wholesale"></strong></div>
+                <div><span>Staff price</span><strong id="staff"></strong></div>
+                <div><span>Margin applied</span><strong id="margin"></strong></div>
+            </div>
+
+            <div class="row">
+                <label for="category">Pricing category</label>
+                <select id="category"></select>
+            </div>
+            <div class="row">
+                <label for="asset-group">Halo group</label>
+                <select id="asset-group"></select>
+            </div>
+            <div class="row" id="qbo-row" style="display:none;">
+                <label for="qbo-item">QuickBooks item</label>
+                <select id="qbo-item"></select>
+            </div>
+            <p id="tier" class="meta"></p>
+
+            <div id="existing-warning" class="existing-warning" style="display:none;"></div>
+
+            <div class="field-group">
+                <label for="item-name">Item name</label>
+                <input id="item-name" type="text" autocomplete="off">
+            </div>
+
+            <div class="field-group">
+                <label for="item-desc">Description</label>
+                <textarea id="item-desc" rows="4"></textarea>
+            </div>
+
+            <div class="field-group">
+                <label>Product images <span id="image-count" class="meta"></span></label>
+                <div id="image-picker"></div>
+            </div>
+
+            <div id="confirm-actions" class="actions">
+                <button id="add" class="primary">Add to Halo</button>
+                <button id="add-update" class="primary" style="display:none;">Update existing</button>
+                <button id="cancel" class="danger">Cancel</button>
+            </div>
+            <p id="confirm-msg" class="msg"></p>
+        </div>
+
+        <!-- Screen 3: Result (hidden until workflow completes) -->
+        <div id="result" style="display:none;"></div>
+
+        <!-- Collapsible Leader → pricing category map -->
+        <details id="catmap-editor" class="margin-editor">
+            <summary id="catmap-summary">Leader category mapping</summary>
+            <div class="row" style="padding: 8px 14px;">
+                <button id="edit-toggle" class="edit-toggle">🔒 Edit</button>
+                <p id="catmap-msg" class="msg"></p>
+            </div>
+            <div id="catmap-scroll">
+                <table id="catmap-table"></table>
+            </div>
+            <div class="row add-category-row" id="add-map-row" style="display:none;">
+                <input id="new-map-leader" type="text" placeholder="Leader category name">
+                <select id="new-map-pricing"></select>
+                <button id="add-map-row-btn">Add mapping</button>
+            </div>
+        </details>
+    </div>
+    <script src="app.js"></script>
+</body>
+
+</html>

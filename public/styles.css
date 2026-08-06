@@ -1,0 +1,497 @@
+/* Leader → Halo Product Sync — iframe-friendly UI */
+:root {
+    --bg: #f7f8fa;
+    --panel: #ffffff;
+    --border: #e3e6eb;
+    --text: #1a1f2e;
+    --muted: #6b7280;
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --danger: #dc2626;
+    --success: #16a34a;
+    --highlight: #ecfdf5;
+    --highlight-border: #6ee7b7;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 16px;
+    font-size: 14px;
+}
+
+#app {
+    max-width: 800px;
+    margin: 0 auto;
+}
+/* Audit report goes full-width */
+body.audit-active #app {
+    max-width: none;
+}
+
+/* ─── Search autocomplete ────────────────────────────────────────────────── */
+.search-row {
+    position: relative;
+}
+.search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 320px;
+    overflow-y: auto;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 100;
+}
+.search-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 13px;
+}
+.search-item:last-child { border-bottom: none; }
+.search-item:hover, .search-item.active {
+    background: #eff6ff;
+}
+.search-item .si-name { font-weight: 500; color: var(--text); }
+.search-item .si-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+h1 {
+    font-size: 18px;
+    margin: 0 0 16px;
+}
+
+h2 { font-size: 15px; margin: 0 0 6px; line-height: 1.35; }
+
+.hint, .meta { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+
+.row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+input[type="text"], select {
+    flex: 1;
+    min-width: 180px;
+    padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    background: var(--panel);
+}
+
+label { font-size: 13px; color: var(--muted); }
+
+button {
+    padding: 9px 18px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    background: var(--primary);
+    color: #fff;
+    transition: background 0.15s;
+}
+button:hover { background: var(--primary-hover); }
+button.primary { background: var(--success); }
+button.primary:hover { background: #15803d; }
+button.danger { background: var(--danger); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.actions { display: flex; gap: 8px; margin-top: 16px; }
+
+.msg { font-size: 13px; min-height: 18px; margin: 8px 0 0; }
+.msg.error { color: var(--danger); }
+.msg.success { color: var(--success); }
+
+/* Product card */
+.card {
+    display: flex;
+    gap: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 14px;
+}
+#product-image {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+    border-radius: 6px;
+    background: #f3f4f6;
+    flex-shrink: 0;
+}
+.card-body { flex: 1; min-width: 0; }
+.codes { font-size: 12px; color: var(--muted); margin: 4px 0 0; word-break: break-word; }
+
+/* Price grid */
+.price-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.price-grid > div {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.price-grid input[type="number"] {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 16px;
+    background: #fff;
+}
+.price-grid span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.price-grid strong { font-size: 17px; }
+.price-grid .highlight {
+    background: var(--highlight);
+    border-color: var(--highlight-border);
+}
+.price-grid .highlight strong { color: var(--success); }
+.sub-price { font-size: 12px; color: var(--muted); font-weight: normal; }
+
+#result {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    font-size: 15px;
+}
+#result a { color: var(--primary); font-weight: 600; }
+
+/* ─── Editable fields ───────────────────────────────────────────────────── */
+.field-group {
+    margin-bottom: 12px;
+}
+.field-group label {
+    display: block;
+    margin-bottom: 4px;
+}
+#item-name {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    background: var(--panel);
+}
+#item-desc {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    background: var(--panel);
+    resize: vertical;
+    font-family: inherit;
+}
+
+/* ─── Edit toggle for tables ────────────────────────────────────────────── */
+.edit-toggle {
+    padding: 4px 14px;
+    font-size: 13px;
+    background: var(--panel);
+    color: var(--muted);
+    border: 1px solid var(--border);
+}
+.edit-toggle.unlocked {
+    background: var(--success);
+    color: #fff;
+}
+/* Read-only table cells (inputs disabled) */
+#margin-table input:disabled, #catmap-table select:disabled,
+#catmap-table .map-remove:disabled, .cat-remove:disabled {
+    color: var(--text);
+    background: transparent;
+    -webkit-text-fill-color: var(--text);
+    opacity: 1;
+    border-color: transparent;
+}
+#margin-table input:disabled {
+    appearance: none;
+    -moz-appearance: textfield;
+}
+.cat-remove:disabled, .map-remove:disabled {
+    display: none;
+}
+
+/* ─── Image picker ──────────────────────────────────────────────────────── */
+#image-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 6px;
+}
+.img-option {
+    position: relative;
+    width: 100px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+}
+.img-option img {
+    width: 100%;
+    height: 100px;
+    object-fit: contain;
+    background: #f3f4f6;
+    display: block;
+}
+.img-option input[type="checkbox"] {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 16px;
+    height: 16px;
+    z-index: 2;
+}
+.img-option .primary-badge {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    display: none;
+}
+.img-option.is-primary { border-color: var(--success); }
+.img-option.is-primary .primary-badge { display: inline; }
+.img-option .primary-radio {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 14px;
+    height: 14px;
+    z-index: 2;
+}
+.img-option .primary-label {
+    position: absolute;
+    bottom: 3px;
+    right: 22px;
+    font-size: 9px;
+    color: var(--muted);
+    z-index: 2;
+}
+
+/* ─── Audit report ──────────────────────────────────────────────────────── */
+#audit-scroll {
+    overflow-x: auto;
+    margin-top: 12px;
+}
+#audit-table {
+    border-collapse: collapse;
+    font-size: 13px;
+    width: 100%;
+    min-width: 900px;
+    table-layout: fixed;
+}
+#audit-table th, #audit-table td {
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#audit-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#audit-table td.wrap-cell { white-space: normal; word-break: break-word; }
+#audit-table th {
+    background: #f3f4f6;
+    color: var(--text);
+    position: relative;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+/* Row colour based on retail delta direction */
+#audit-table tr.deviation-up { background: #ecfdf5; }     /* price going up — green */
+#audit-table tr.deviation-down { background: #fef2f2; }   /* price going down — red */
+/* Column resize handle */
+#audit-table th .resize-handle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    cursor: col-resize;
+    user-select: none;
+    z-index: 2;
+}
+#audit-table th .resize-handle:hover {
+    background: var(--primary);
+}
+#audit-table .delta-pos { color: var(--success); font-weight: 600; }
+#audit-table .delta-neg { color: var(--danger); font-weight: 600; }
+#audit-table .update-btn {
+    padding: 4px 12px;
+    font-size: 12px;
+    background: var(--primary);
+    color: #fff;
+}
+
+/* ─── Existing-item warning ─────────────────────────────────────────────── */
+.existing-warning {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    font-size: 13px;
+}
+.existing-warning strong { color: #92400e; }
+.existing-warning a { color: var(--primary); font-weight: 600; }
+.existing-warning .prices { color: var(--muted); margin-top: 4px; }
+
+/* ─── Margin editor ─────────────────────────────────────────────────────── */
+.margin-editor {
+    margin-top: 28px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0;
+}
+.margin-editor > summary {
+    cursor: pointer;
+    padding: 12px 14px;
+    font-weight: 600;
+    font-size: 14px;
+    list-style: none;
+    user-select: none;
+}
+.margin-editor > summary::before {
+    content: "▸";
+    display: inline-block;
+    margin-right: 8px;
+    transition: transform 0.15s;
+}
+.margin-editor[open] > summary::before { transform: rotate(90deg); }
+.margin-editor[open] > summary { border-bottom: 1px solid var(--border); }
+
+#margin-scroll {
+    overflow-x: auto;
+    padding: 10px 14px 14px;
+}
+#margin-table {
+    border-collapse: collapse;
+    font-size: 14px;
+    width: 100%;
+    min-width: 1000px;
+}
+#margin-table th, #margin-table td {
+    border: 1px solid var(--border);
+    padding: 0;
+    text-align: center;
+}
+#margin-table th {
+    background: #f3f4f6;
+    color: var(--text);
+    font-weight: 600;
+    padding: 8px 4px;
+    white-space: nowrap;
+}
+#margin-table th.row-label, #margin-table td.row-label {
+    text-align: left;
+    padding: 8px 12px;
+    white-space: nowrap;
+    font-weight: 600;
+    background: #f9fafb;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+}
+#margin-table input {
+    width: 100%;
+    min-width: 58px;
+    border: none;
+    text-align: center;
+    font-size: 14px;
+    padding: 10px 4px;
+    background: transparent;
+}
+#margin-table input:focus {
+    outline: 2px solid var(--primary);
+    background: #fff;
+    z-index: 2;
+    position: relative;
+}
+#margin-table input.changed {
+    background: #fef9c3;   /* subtle yellow highlight while unsaved */
+}
+
+/* Add/remove category row */
+.add-category-row {
+    margin-top: 12px;
+    padding: 0 14px;
+}
+.add-category-row input, .add-category-row select {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 120px;
+}
+.add-category-row input[type="number"] { width: 70px; }
+
+/* Remove-category button in the margin grid label cell */
+.cat-remove {
+    margin-left: 8px;
+    padding: 1px 6px;
+    font-size: 11px;
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--border);
+    line-height: 1.4;
+}
+.cat-remove:hover { background: var(--danger); color: #fff; }
+
+/* ─── Category map table ────────────────────────────────────────────────── */
+#catmap-scroll {
+    overflow-x: auto;
+    padding: 10px 14px 14px;
+    max-height: 480px;
+    overflow-y: auto;
+}
+#catmap-table {
+    border-collapse: collapse;
+    font-size: 14px;
+    width: 100%;
+}
+#catmap-table th, #catmap-table td {
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    text-align: left;
+}
+#catmap-table th {
+    background: #f3f4f6;
+    color: var(--text);
+    font-weight: 600;
+}
+#catmap-table td.leader-name { white-space: nowrap; }
+#catmap-table select { min-width: 180px; }
+.map-remove {
+    padding: 2px 8px;
+    font-size: 12px;
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--border);
+}
+.map-remove:hover { background: var(--danger); color: #fff; }

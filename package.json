@@ -1,0 +1,19 @@
+{
+  "name": "leader-halo-sync",
+  "version": "1.0.0",
+  "description": "Leader → Halo product sync webapp. Look up Leader products, apply tiered pricing, create items in Halo.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "sql.js": "^1.13.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
