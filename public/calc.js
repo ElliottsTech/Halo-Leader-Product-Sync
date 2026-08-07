@@ -92,11 +92,10 @@ $('cost-ex').addEventListener('input', calcFromEx);
 $('cost-inc').addEventListener('input', calcFromInc);
 $('category').addEventListener('change', () => renderPricing(parseFloat($('cost-ex').value) || 0));
 
-// ─── Shared margin table editor (same as main page) ────────────────────────
+// ─── Margin table (read-only by default, edit with password) ──────────────
 const TIER_COLS = ['<$5','$5','$10','$20','$50','$100','$250','$500','$750','$1k',
   '$1.25k','$1.5k','$1.75k','$2k','$2.25k','$2.5k','$2.75k','$3k','$3.25k',
   '$3.5k','$3.75k','$4k+'];
-let saveTimer = null;
 
 function renderMarginTable() {
     const tbl = $('margin-table');
@@ -141,7 +140,6 @@ function renderMarginTable() {
         }
         tbl.appendChild(tr);
     }
-    refreshCategoryDropdowns();
 }
 
 function onMarginInput(e) {
@@ -155,6 +153,7 @@ function onMarginInput(e) {
     scheduleMarginSave();
 }
 
+let saveTimer = null;
 function scheduleMarginSave() {
     clearTimeout(saveTimer);
     setMsg($('margin-msg'), 'Saving…');
@@ -190,6 +189,7 @@ $('reset-margins').onclick = () => {
     Object.assign(MARGIN_TABLE, defaultMarginTable());
     refreshCategories();
     renderMarginTable();
+    setEditable(true);
     renderPricing(parseFloat($('cost-ex').value) || 0);
     scheduleMarginSave();
 };
@@ -227,8 +227,9 @@ $('add-category').onclick = async () => {
         if (data.status === 'added') {
             MARGIN_TABLE[name] = Array(22).fill(margin);
             refreshCategories();
-            renderMarginTable();
             populateCategories();
+            renderMarginTable();
+            setEditable(true);
             $('new-cat-name').value = '';
             setMsg($('margin-msg'), `Added "${name}".`, 'success');
         } else {
@@ -242,15 +243,14 @@ $('add-category').onclick = async () => {
 async function removePricingCategory(name) {
     if (!confirm(`Remove pricing category "${name}"?`)) return;
     try {
-        const res = await fetch(`api/category?name=${encodeURIComponent(name)}`, { method: 'DELETE' });
+        const res = await fetch(`/api/category?name=${encodeURIComponent(name)}`, { method: 'DELETE' });
         const data = await res.json();
         if (data.status === 'removed') {
             delete MARGIN_TABLE[name];
             refreshCategories();
-            renderMarginTable();
             populateCategories();
-            await loadCategoryMap();
-            renderCatmapTable();
+            renderMarginTable();
+            setEditable(true);
             setMsg($('margin-msg'), `Removed "${name}".`, 'success');
         }
     } catch (e) {
@@ -258,129 +258,11 @@ async function removePricingCategory(name) {
     }
 }
 
-function refreshCategoryDropdowns() {
-    populateCategories();
-    const mapSel = $('new-map-pricing');
-    if (mapSel) {
-        const prev = mapSel.value;
-        mapSel.innerHTML = '';
-        for (const c of CATEGORIES) {
-            const o = document.createElement('option');
-            o.value = c; o.textContent = c;
-            mapSel.appendChild(o);
-        }
-        if (CATEGORIES.includes(prev)) mapSel.value = prev;
-    }
-    renderCatmapDropdowns();
-}
-
-// ─── Shared category map editor ────────────────────────────────────────────
-let CATEGORY_MAP = {};
-
-async function loadCategoryMap() {
-    try {
-        const res = await fetch('/api/category-map');
-        CATEGORY_MAP = await res.json();
-    } catch (e) { CATEGORY_MAP = {}; }
-}
-
-function renderCatmapTable() {
-    const tbl = $('catmap-table');
-    if (!tbl) return;
-    tbl.innerHTML = '';
-    $('catmap-summary').textContent = `Leader category mapping (${Object.keys(CATEGORY_MAP).length} mapped)`;
-    const thead = document.createElement('tr');
-    ['Leader category', 'Pricing category', ''].forEach((h) => {
-        const th = document.createElement('th');
-        th.textContent = h;
-        thead.appendChild(th);
-    });
-    tbl.appendChild(thead);
-    const keys = Object.keys(CATEGORY_MAP).sort((a, b) => a.localeCompare(b));
-    for (const leaderCat of keys) {
-        const tr = document.createElement('tr');
-        const tdName = document.createElement('td');
-        tdName.className = 'leader-name';
-        tdName.textContent = leaderCat;
-        tr.appendChild(tdName);
-        const tdSel = document.createElement('td');
-        const sel = document.createElement('select');
-        sel.dataset.leader = leaderCat;
-        for (const c of CATEGORIES) {
-            const o = document.createElement('option');
-            o.value = c; o.textContent = c;
-            if (c === CATEGORY_MAP[leaderCat]) o.selected = true;
-            sel.appendChild(o);
-        }
-        sel.addEventListener('change', onCatmapChange);
-        tdSel.appendChild(sel);
-        tr.appendChild(tdSel);
-        const tdRm = document.createElement('td');
-        const rm = document.createElement('button');
-        rm.className = 'map-remove';
-        rm.textContent = 'Remove';
-        rm.onclick = () => { delete CATEGORY_MAP[leaderCat]; renderCatmapTable(); scheduleCatmapSave(); };
-        tdRm.appendChild(rm);
-        tr.appendChild(tdRm);
-        tbl.appendChild(tr);
-    }
-}
-
-function renderCatmapDropdowns() {
-    document.querySelectorAll('#catmap-table select').forEach((sel) => {
-        const leader = sel.dataset.leader;
-        const cur = sel.value;
-        sel.innerHTML = '';
-        for (const c of CATEGORIES) {
-            const o = document.createElement('option');
-            o.value = c; o.textContent = c;
-            if (c === (CATEGORY_MAP[leader] || cur)) o.selected = true;
-            sel.appendChild(o);
-        }
-    });
-}
-
-function onCatmapChange(e) {
-    CATEGORY_MAP[e.target.dataset.leader] = e.target.value;
-    scheduleCatmapSave();
-}
-
-let catmapSaveTimer = null;
-function scheduleCatmapSave() {
-    clearTimeout(catmapSaveTimer);
-    setMsg($('catmap-msg'), 'Saving…');
-    catmapSaveTimer = setTimeout(async () => {
-        try {
-            const res = await fetch('/api/category-map', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(CATEGORY_MAP),
-            });
-            const data = await res.json();
-            if (data.status === 'saved') {
-                setMsg($('catmap-msg'), 'Saved ✓', 'success');
-                setTimeout(() => setMsg($('catmap-msg'), ''), 1500);
-            }
-        } catch (e) { setMsg($('catmap-msg'), 'Save failed: ' + e.message, 'error'); }
-    }, 600);
-}
-
-$('add-map-row').onclick = () => {
-    const leader = $('new-map-leader').value.trim();
-    const pricing = $('new-map-pricing').value;
-    if (!leader) { setMsg($('catmap-msg'), 'Enter a Leader category name.', 'error'); return; }
-    CATEGORY_MAP[leader] = pricing;
-    $('new-map-leader').value = '';
-    renderCatmapTable();
-    scheduleCatmapSave();
-};
-
 // ─── Edit toggle (password-gated) ──────────────────────────────────────────
 let editUnlocked = false;
 
 $('edit-toggle').onclick = async () => {
     if (editUnlocked) {
-        // Lock
         editUnlocked = false;
         $('edit-toggle').textContent = '🔒 Edit';
         $('edit-toggle').classList.remove('unlocked');
@@ -419,7 +301,6 @@ function setEditable(on) {
 
 // ─── Init ──────────────────────────────────────────────────────────────────
 async function init() {
-    // Load saved margin table (replaces defaults with any saved edits).
     try {
         const res = await fetch('/api/margins');
         const saved = await res.json();
@@ -434,8 +315,6 @@ async function init() {
 
     populateCategories();
     renderPricing(0);
-
-    // Always render the margin table (read-only by default).
     renderMarginTable();
     setEditable(false);
 }
