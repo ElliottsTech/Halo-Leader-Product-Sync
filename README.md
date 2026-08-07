@@ -107,3 +107,10 @@ Point a Halo custom tile / iframe at the app's URL (e.g.
 `https://leader-sync.elliotts.tech`). The UI is self-contained at ~800px wide
 and handles the full search → confirm → result flow.
 ```
+
+<img width="419" height="316" alt="dyn-7392b64795b405deaa764e34cfdf58d4" src="https://github.com/user-attachments/assets/3900571a-6be8-45bf-93ac-e94e3d813841" />
+
+<img width="800" height="246" alt="image" src="https://github.com/user-attachments/assets/4ffeb939-be36-4021-a40d-fc32400233d7" />
+<img width="581" height="382" alt="image" src="https://github.com/user-attachments/assets/4118d5e9-63d1-487b-91cd-d9e6da399132" />
+
+<img width="419" height="316" alt="dyn-7392b64795b405deaa764e34cfdf58d4" src="https://github.com/user-attachments/assets/b2dfd185-2525-4f54-8f22-cb40c9373487" />
