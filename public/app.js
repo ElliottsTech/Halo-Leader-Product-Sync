@@ -821,3 +821,19 @@ showScreen('search');
 loadAssetGroups();
 loadQboItems();
 initMargins();
+
+// ─── Auto-update from URL param: ?update=[barcode] ─────────────────────────
+// When Halo's "Update from Leader" button links here with a barcode,
+// auto-fill the search box and submit the lookup immediately.
+(function checkUpdateParam() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('update')) {
+        const barcode = params.get('update');
+        if (!barcode || !barcode.trim()) {
+            setMsg($('search-msg'), 'No barcode is set in this Halo item. Go back, set a barcode on the item, then try again.', 'error');
+            return;
+        }
+        $('sku').value = barcode.trim();
+        doLookup();
+    }
+})();
