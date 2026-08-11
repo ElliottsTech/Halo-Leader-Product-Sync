@@ -1,6 +1,6 @@
 // ─── Pricing engine (must stay in sync with src/pricing.js) ──────────────
 const TIER_BOUNDS = [5,10,20,50,100,250,500,750,1000,1250,1500,1750,2000,2250,2500,2750,3000,3250,3500,3750,4000,Number.MAX_SAFE_INTEGER];
-const TIER_LABELS = ['< $5','$5–10','$10–20','$20–50','$50–100','$100–250','$250–500','$500–750','$750–1k','$1k–1.25k','$1.25k–1.5k','$1.5k–1.75k','$1.75k–2k','$2k–2.25k','$2.25k–2.5k','$2.5k–2.75k','$2.75k–3k','$3k–3.25k','$3.25k–3.5k','$3.5k–3.75k','$3.75k–4k','> $4k'];
+const TIER_LABELS = ['< $5','$5-10','$10-20','$20-50','$50-100','$100-250','$250-500','$500-750','$750-1k','$1k-1.25k','$1.25k-1.5k','$1.5k-1.75k','$1.75k-2k','$2k-2.25k','$2.25k-2.5k','$2.5k-2.75k','$2.75k-3k','$3k-3.25k','$3.25k-3.5k','$3.5k-3.75k','$3.75k-4k','> $4k'];
 const linear = (D,B) => { const v=[D]; for(let i=1;i<21;i++) v.push(D-(D-B)*(i/21)); v.push(B); return v; };
 function cables(){const B=0.28,D=0.79,v=[0.79,0.65,0.53,0.5,0.45,0.4];[0.8,0.82,0.85,0.89,0.93,0.95,0.96,0.98,0.99,1.0].forEach(k=>v.push(D-(D-B)*k));while(v.length<22)v.push(B);return v;}
 function computers(){const B=0.25,D=0.35,v=[D];[0.35,0.45,0.65,0.7,0.72,0.74,0.76,0.8,0.84,0.88,0.9,0.92,0.94,0.95,0.96,0.97,0.98,0.99,0.995,0.998].forEach(k=>v.push(D-(D-B)*k));v.push(B);return v;}
@@ -100,13 +100,13 @@ const TIER_COLS = ['<$5','$5','$10','$20','$50','$100','$250','$500','$750','$1k
 function renderMarginTable() {
     const tbl = $('margin-table');
     tbl.innerHTML = '';
-    $('margin-summary').textContent = `Margin tiers (${CATEGORIES.length} categories × 22 cost tiers)`;
+    $('margin-summary').textContent = 'Margin tiers (' + CATEGORIES.length + ' categories x 22 cost tiers)';
     const thead = document.createElement('tr');
     const corner = document.createElement('th');
     corner.className = 'row-label';
     corner.textContent = 'Category';
     thead.appendChild(corner);
-    TIER_COLS.forEach((t) => {
+    TIER_COLS.forEach(function(t) {
         const th = document.createElement('th');
         th.textContent = t;
         thead.appendChild(th);
@@ -121,9 +121,9 @@ function renderMarginTable() {
         label.appendChild(span);
         const rm = document.createElement('button');
         rm.className = 'cat-remove';
-        rm.textContent = '✕';
-        rm.title = `Remove "${cat}"`;
-        rm.onclick = () => removePricingCategory(cat);
+        rm.textContent = 'X';
+        rm.title = 'Remove "' + cat + '"';
+        rm.onclick = function() { removePricingCategory(cat); };
         label.appendChild(rm);
         tr.appendChild(label);
         for (let i = 0; i < 22; i++) {
@@ -156,10 +156,10 @@ function onMarginInput(e) {
 let saveTimer = null;
 function scheduleMarginSave() {
     clearTimeout(saveTimer);
-    setMsg($('margin-msg'), 'Saving…');
-    saveTimer = setTimeout(async () => {
+    setMsg($('margin-msg'), 'Saving...');
+    saveTimer = setTimeout(async function() {
         try {
-            const res = await fetch('/api/margins', {
+            const res = await fetch('/Leader-Halo/api/margins', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(MARGIN_TABLE),
@@ -167,9 +167,9 @@ function scheduleMarginSave() {
             const data = await res.json();
             if (data.status === 'saved') {
                 document.querySelectorAll('#margin-table input.changed')
-                    .forEach((el) => el.classList.remove('changed'));
-                setMsg($('margin-msg'), 'Saved ✓', 'success');
-                setTimeout(() => setMsg($('margin-msg'), ''), 1500);
+                    .forEach(function(el) { el.classList.remove('changed'); });
+                setMsg($('margin-msg'), 'Saved', 'success');
+                setTimeout(function() { setMsg($('margin-msg'), ''); }, 1500);
             } else {
                 setMsg($('margin-msg'), data.message || 'Save failed.', 'error');
             }
@@ -184,7 +184,7 @@ function setMsg(el, text, type) {
     el.className = 'msg' + (type ? ' ' + type : '');
 }
 
-$('reset-margins').onclick = () => {
+$('reset-margins').onclick = function() {
     if (!confirm('Reset all margins to the built-in defaults? This overwrites your saved values.')) return;
     Object.assign(MARGIN_TABLE, defaultMarginTable());
     refreshCategories();
@@ -195,10 +195,10 @@ $('reset-margins').onclick = () => {
 };
 
 function defaultMarginTable() {
-    const lin = (D, B) => { const v=[D]; for(let i=1;i<21;i++) v.push(D-(D-B)*(i/21)); v.push(B); return v; };
-    function cb(){const B=0.28,D=0.79,v=[0.79,0.65,0.53,0.5,0.45,0.4];[0.8,0.82,0.85,0.89,0.93,0.95,0.96,0.98,0.99,1.0].forEach(k=>v.push(D-(D-B)*k));while(v.length<22)v.push(B);return v;}
-    function cp(){const B=0.25,D=0.35,v=[D];[0.35,0.45,0.65,0.7,0.72,0.74,0.76,0.8,0.84,0.88,0.9,0.92,0.94,0.95,0.96,0.97,0.98,0.99,0.995,0.998].forEach(k=>v.push(D-(D-B)*k));v.push(B);return v;}
-    function cm(){const B=0.25,D=0.35,v=[D];for(let i=1;i<=20;i++)v.push(D-(D-B)*(Math.log(1+1.5*i)/Math.log(1+1.5*21)));v.push(B);return v;}
+    const lin = function(D, B) { const v=[D]; for(var i=1;i<21;i++) v.push(D-(D-B)*(i/21)); v.push(B); return v; };
+    function cb(){var B=0.28,D=0.79,v=[0.79,0.65,0.53,0.5,0.45,0.4];[0.8,0.82,0.85,0.89,0.93,0.95,0.96,0.98,0.99,1.0].forEach(function(k){v.push(D-(D-B)*k);});while(v.length<22)v.push(B);return v;}
+    function cp(){var B=0.25,D=0.35,v=[D];[0.35,0.45,0.65,0.7,0.72,0.74,0.76,0.8,0.84,0.88,0.9,0.92,0.94,0.95,0.96,0.97,0.98,0.99,0.995,0.998].forEach(function(k){v.push(D-(D-B)*k);});v.push(B);return v;}
+    function cm(){var B=0.25,D=0.35,v=[D];for(var i=1;i<=20;i++)v.push(D-(D-B)*(Math.log(1+1.5*i)/Math.log(1+1.5*21)));v.push(B);return v;}
     return {
         'Cables / Peripherals': cb(),
         'Computers': cp(),
@@ -213,15 +213,15 @@ function defaultMarginTable() {
     };
 }
 
-$('add-category').onclick = async () => {
-    const name = $('new-cat-name').value.trim();
-    const margin = Number($('new-cat-margin').value) / 100;
+$('add-category').onclick = async function() {
+    var name = $('new-cat-name').value.trim();
+    var margin = Number($('new-cat-margin').value) / 100;
     if (!name) { setMsg($('margin-msg'), 'Enter a category name.', 'error'); return; }
     try {
-        const res = await fetch('/api/category', {
+        const res = await fetch('/Leader-Halo/api/category', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, margin }),
+            body: JSON.stringify({ name: name, margin: margin }),
         });
         const data = await res.json();
         if (data.status === 'added') {
@@ -231,7 +231,7 @@ $('add-category').onclick = async () => {
             renderMarginTable();
             setEditable(true);
             $('new-cat-name').value = '';
-            setMsg($('margin-msg'), `Added "${name}".`, 'success');
+            setMsg($('margin-msg'), 'Added "' + name + '".', 'success');
         } else {
             setMsg($('margin-msg'), data.message || 'Could not add category.', 'error');
         }
@@ -241,9 +241,9 @@ $('add-category').onclick = async () => {
 };
 
 async function removePricingCategory(name) {
-    if (!confirm(`Remove pricing category "${name}"?`)) return;
+    if (!confirm('Remove pricing category "' + name + '"?')) return;
     try {
-        const res = await fetch(`/api/category?name=${encodeURIComponent(name)}`, { method: 'DELETE' });
+        const res = await fetch('/Leader-Halo/api/category?name=' + encodeURIComponent(name), { method: 'DELETE' });
         const data = await res.json();
         if (data.status === 'removed') {
             delete MARGIN_TABLE[name];
@@ -251,7 +251,7 @@ async function removePricingCategory(name) {
             populateCategories();
             renderMarginTable();
             setEditable(true);
-            setMsg($('margin-msg'), `Removed "${name}".`, 'success');
+            setMsg($('margin-msg'), 'Removed "' + name + '".', 'success');
         }
     } catch (e) {
         setMsg($('margin-msg'), 'Error: ' + e.message, 'error');
@@ -261,18 +261,18 @@ async function removePricingCategory(name) {
 // ─── Edit toggle (password-gated) ──────────────────────────────────────────
 let editUnlocked = false;
 
-$('edit-toggle').onclick = async () => {
+$('edit-toggle').onclick = async function() {
     if (editUnlocked) {
         editUnlocked = false;
-        $('edit-toggle').textContent = '🔒 Edit';
+        $('edit-toggle').textContent = 'Edit';
         $('edit-toggle').classList.remove('unlocked');
         setEditable(false);
         return;
     }
-    const pw = prompt('Enter edit password:');
+    var pw = prompt('Enter edit password:');
     if (!pw) return;
     try {
-        const res = await fetch('/api/auth', {
+        const res = await fetch('/Leader-Halo/api/auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password: pw }),
@@ -280,7 +280,7 @@ $('edit-toggle').onclick = async () => {
         const data = await res.json();
         if (data.ok) {
             editUnlocked = true;
-            $('edit-toggle').textContent = '🔓 Locked';
+            $('edit-toggle').textContent = 'Lock';
             $('edit-toggle').classList.add('unlocked');
             setEditable(true);
             setMsg($('margin-msg'), '', '');
@@ -293,8 +293,8 @@ $('edit-toggle').onclick = async () => {
 };
 
 function setEditable(on) {
-    document.querySelectorAll('#margin-table input').forEach(el => el.disabled = !on);
-    document.querySelectorAll('.cat-remove').forEach(el => el.disabled = !on);
+    document.querySelectorAll('#margin-table input').forEach(function(el) { el.disabled = !on; });
+    document.querySelectorAll('.cat-remove').forEach(function(el) { el.disabled = !on; });
     $('add-cat-row').style.display = on ? '' : 'none';
     $('reset-row').style.display = on ? '' : 'none';
 }
@@ -302,7 +302,7 @@ function setEditable(on) {
 // ─── Init ──────────────────────────────────────────────────────────────────
 async function init() {
     try {
-        const res = await fetch('/api/margins');
+        const res = await fetch('/Leader-Halo/api/margins');
         const saved = await res.json();
         if (saved && typeof saved === 'object') {
             for (const k of Object.keys(MARGIN_TABLE)) delete MARGIN_TABLE[k];
